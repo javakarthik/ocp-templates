@@ -1,12 +1,60 @@
-apiVersion: v1
-items:
-    -
-        kind: BuildConfig
-        apiVersion: v1
-        metadata:
-            name: pipeline-demo
-        spec:
-            triggers: [{github: {secret: 5Mlic4Le}, type: GitHub}, {generic: {secret: FiArdDBH}, type: Generic}]
-            strategy: {type: JenkinsPipeline, jenkinsPipelineStrategy: {jenkinsfile: "node {\nstage (\"Build\")\n          echo '*** Build Starting ***'\n          openshiftBuild bldCfg: 'cotd2', buildName: '', checkForTriggeredDeployments: 'false', commitID: '', namespace: '', showBuildLogs: 'true', verbose: 'true'\n          openshiftVerifyBuild bldCfg: 'cotd2', checkForTriggeredDeployments: 'false', namespace: '', verbose: 'false'\n          echo '*** Build Complete ***'\n    stage (\"Deploy and Verify in Development Env\")\n          echo '*** Deployment Starting ***'\n          openshiftDeploy depCfg: 'cotd2', namespace: '', verbose: 'false', waitTime: ''\n          openshiftVerifyDeployment authToken: '', depCfg: 'cotd2', namespace: '', replicaCount: '1', verbose: 'false', verifyReplicaCount: 'false', waitTime: ''\n          echo '*** Deployment Complete ***'\n     openshiftVerifyService apiURL:'https://openshift.default.svc.cluster.local', authToken:'', namespace:'honda-dev', svcName:'cotd2', verbose:'false'\n     echo '*** Service Verification Complete ***'\n     openshiftTag(srcStream:'cotd2', srcTag:'latest', destStream:'cotd2', destTag:'testready')\n     stage ('Deploy and Test in Testing Env')\n     echo '*** Deploy testready build in honda-test project  ***'\n     openshiftDeploy apiURL:'https://openshift.default.svc.cluster.local', authToken:'', depCfg:'cotd2', namespace:'honda-test', verbose:'false', waitTime:''\n     openshiftVerifyDeployment apiURL:'https://openshift.default.svc.cluster.local', authToken:'', depCfg:'cotd2', namespace:'honda-test', replicaCount:'1', verbose:'false', verifyReplicaCount:'false', waitTime:'10'\n     sh 'curl http://cotd2-honda-test.apps.na311.openshift.opentlc.com/data/ | grep cats -q'\n     stage ('Promote and Verify in Production Env')\n     echo '*** Waiting for Input ***'\n     input 'Should we deploy to Production?'\n     openshiftTag(srcStream:'cotd2', srcTag:'testready', destStream:'cotd2', destTag:'prodready')\n     echo '*** Deploying to Production ***'\n     openshiftDeploy apiURL:'https://openshift.default.svc.cluster.local', authToken:'', depCfg:'cotd2', namespace:'honda-prod', verbose:'false', waitTime:''\n     openshiftVerifyDeployment apiURL:'https://openshift.default.svc.cluster.local', authToken:'', depCfg:'cotd2', namespace:'honda-prod', replicaCount:'1', verbose:'false', verifyReplicaCount:'false', waitTime:'10'\n     sleep 10\n     sh 'curl http://cotd2-honda-prod.apps.na311.openshift.opentlc.com/data/ | grep cats -q'\n    \n}\n"}}
-kind: List
-metadata: {}
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  creationTimestamp: '2019-09-16T10:46:38Z'
+  name: pipeline-demo
+  namespace: honda-dev
+  resourceVersion: '181727563'
+  selfLink: /apis/build.openshift.io/v1/namespaces/honda-dev/buildconfigs/pipeline-demo
+  uid: 429b5b75-d86f-11e9-9d16-025f6b8bf8ee
+spec:
+  nodeSelector: {}
+  output: {}
+  postCommit: {}
+  resources: {}
+  runPolicy: Serial
+  source:
+    type: None
+  strategy:
+    jenkinsPipelineStrategy:
+      jenkinsfile: |
+        node {
+        stage ("Build")
+                  echo '*** Build Starting ***'
+                  openshiftBuild bldCfg: 'cotd2', buildName: '', checkForTriggeredDeployments: 'false', commitID: '', namespace: '', showBuildLogs: 'true', verbose: 'true'
+                  openshiftVerifyBuild bldCfg: 'cotd2', checkForTriggeredDeployments: 'false', namespace: '', verbose: 'false'
+                  echo '*** Build Complete ***'
+            stage ("Deploy and Verify in Development Env")
+                  echo '*** Deployment Starting ***'
+                  openshiftDeploy depCfg: 'cotd2', namespace: '', verbose: 'false', waitTime: ''
+                  openshiftVerifyDeployment authToken: '', depCfg: 'cotd2', namespace: '', replicaCount: '1', verbose: 'false', verifyReplicaCount: 'false', waitTime: ''
+                  echo '*** Deployment Complete ***'
+             openshiftVerifyService apiURL:'https://openshift.default.svc.cluster.local', authToken:'', namespace:'honda-dev', svcName:'cotd2', verbose:'false'
+             echo '*** Service Verification Complete ***'
+             openshiftTag(srcStream:'cotd2', srcTag:'latest', destStream:'cotd2', destTag:'testready')
+             stage ('Deploy and Test in Testing Env')
+             echo '*** Deploy testready build in honda-test project  ***'
+             openshiftDeploy apiURL:'https://openshift.default.svc.cluster.local', authToken:'', depCfg:'cotd2', namespace:'honda-test', verbose:'false', waitTime:''
+             openshiftVerifyDeployment apiURL:'https://openshift.default.svc.cluster.local', authToken:'', depCfg:'cotd2', namespace:'honda-test', replicaCount:'1', verbose:'false', verifyReplicaCount:'false', waitTime:'10'
+             sh 'curl http://cotd2-honda-test.apps.na311.openshift.opentlc.com/data/ | grep cats -q'
+             stage ('Promote and Verify in Production Env')
+             echo '*** Waiting for Input ***'
+             input 'Should we deploy to Production?'
+             openshiftTag(srcStream:'cotd2', srcTag:'testready', destStream:'cotd2', destTag:'prodready')
+             echo '*** Deploying to Production ***'
+             openshiftDeploy apiURL:'https://openshift.default.svc.cluster.local', authToken:'', depCfg:'cotd2', namespace:'honda-prod', verbose:'false', waitTime:''
+             openshiftVerifyDeployment apiURL:'https://openshift.default.svc.cluster.local', authToken:'', depCfg:'cotd2', namespace:'honda-prod', replicaCount:'1', verbose:'false', verifyReplicaCount:'false', waitTime:'10'
+             sleep 10
+             sh 'curl http://cotd2-honda-prod.apps.na311.openshift.opentlc.com/data/ | grep cats -q'
+            
+        }
+    type: JenkinsPipeline
+  triggers:
+    - github:
+        secret: 5Mlic4Le
+      type: GitHub
+    - generic:
+        secret: FiArdDBH
+      type: Generic
+status:
+  lastVersion: 1
